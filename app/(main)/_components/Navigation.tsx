@@ -1,18 +1,42 @@
 "use client";
-import { ChevronsLeft, MenuIcon } from "lucide-react";
+import { ChevronsLeft, MenuIcon, PlusCircle, Search, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
-import React, { ElementRef, useRef, useState } from "react";
+import React, { ElementRef, useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
+import {useQuery} from "convex/react"
+import { api } from "@/convex/_generated/api";
+import UserItem from "./UserItem";
+import {useMutation} from "convex/react"
+import Item from "./Item";
+import { toast } from "sonner";
 const Navigation = () => {
   const pathName = usePathname();
   const isMobile = useMediaQuery("(max-width:768px)");
+  const documents = useQuery(api.documents.get)
 
+  const create = useMutation(api.documents.create); 
   const isResizingRef = useRef(false);
   const sideBarRef = useRef<ElementRef<"aside">>(null);
   const navBarRef = useRef<ElementRef<"div">>(null);
   const [isResetting, setIsResetting] = useState(false);
   const [isCollapsed, setisCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (isMobile) {
+      collapse();
+    } else {
+      resetWidth();
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile) {
+      collapse();
+    } else {
+      resetWidth();
+    }
+  }, [pathName, isMobile]);
 
   const handleMouseDown = (
     event: React.MouseEvent<HTMLElement, MouseEvent>
@@ -47,13 +71,53 @@ const Navigation = () => {
   };
 
   const handleMouseUp = () => {
-    isResizingRef.current = false
+    isResizingRef.current = false;
     document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp)
-  } 
+    document.removeEventListener("mouseup", handleMouseUp);
+  };
+
+  //rest the side width to orginal width
+  const resetWidth = () => {
+    if (sideBarRef.current && navBarRef.current) {
+      setisCollapsed(false);
+      setIsResetting(true);
+
+      sideBarRef.current.style.width = isMobile ? "100%" : "240px";
+      navBarRef.current.style.setProperty(
+        "width",
+        isMobile ? "0" : "calc(100%-240px)"
+      );
+      navBarRef.current.style.setProperty("left", isMobile ? "100%" : "240px");
+    }
+
+    // when isreset is active we add transisiton for side bar and nav dar
+    // this aint be drag and hold
+    setTimeout(() => setIsResetting(false), 300);
+  };
+
+  const collapse = () => {
+    if (sideBarRef.current && navBarRef.current) {
+      setisCollapsed(true);
+      setIsResetting(true);
+
+      sideBarRef.current.style.width = "0";
+      navBarRef.current.style.setProperty("width", "100%");
+      navBarRef.current.style.setProperty("left", "0");
+      setTimeout(() => setIsResetting(false), 300);
+    }
+  };
+
+  const handleCreate = () => {
+    const promise = create({title: "Untitled"});
+    toast.promise(promise, {
+      loading: "Creating a new note...",
+      success: "New Note created",
+      error: "Somethign went wrong, try again later."
+    })
+  }
   return (
     <>
-       <aside
+      <aside
         ref={sideBarRef}
         className={cn(
           "group/sidebar h-full bg-secondary overflow-y-auto relative flex w-60 flex-col z-[99999]",
@@ -62,6 +126,7 @@ const Navigation = () => {
         )}
       >
         <div
+          onClick={collapse}
           role="button"
           className={cn(
             "h-6 w-6 text-muted-foreground rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600 absolute top-3 right-2 opacity-0 group-hover/sidebar:opacity-100 transition",
@@ -71,14 +136,33 @@ const Navigation = () => {
           <ChevronsLeft className="h-6 w-6" />
         </div>
         <div>
-          <p>Action items</p>
+          <UserItem />
+          <Item
+            onClick={() =>{}}
+            label={"Search"}
+            icon ={Search}
+            isSearch
+          />
+          <Item
+            onClick={() => {}}
+            label={"Settings"}
+            icon ={Settings}
+            
+          />
+          <Item
+            onClick={handleCreate}
+            label={"New Page"}
+            icon ={PlusCircle}
+          />
         </div>
         <div className="mt-4">
-          <p>Documents</p>
+          {documents?.map((doc) => (
+            <p key={doc._id}>{doc.title}</p>
+          ))}
         </div>
         <div
           onMouseDown={handleMouseDown}
-          onClick={()=> {}}
+          onClick={resetWidth}
           className="opacity-0 group-hover/sidebar:opacity-100 transition cursor-ew-resize absolute h-full w-1 bg-primary/10 right-0 top-0"
         />
       </aside>
@@ -92,7 +176,11 @@ const Navigation = () => {
       >
         <nav className="bg-transparent px-3 py-2 w-full">
           {isCollapsed && (
-            <MenuIcon className="h-6 w-6 text-muted-foreground" role="button" />
+            <MenuIcon
+              onClick={resetWidth}
+              className="h-6 w-6 text-muted-foreground"
+              role="button"
+            />
           )}
         </nav>
       </div>
