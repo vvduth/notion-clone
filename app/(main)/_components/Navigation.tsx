@@ -1,16 +1,18 @@
 "use client";
-import { ChevronsLeft, MenuIcon, Plus, PlusCircle, Search, Settings } from "lucide-react";
+import { ChevronsLeft, MenuIcon, Plus, PlusCircle, Search, Settings, Trash } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React, { ElementRef, useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
-
+import { Popover, PopoverTrigger, PopoverContent
+} from "@radix-ui/react-popover";
 import { api } from "@/convex/_generated/api";
 import UserItem from "./UserItem";
 import {useMutation} from "convex/react"
 import Item from "./Item";
 import { toast } from "sonner";
 import { DocumentList } from "./DocumentList";
+import TrashBox from "./TrashBox";
 const Navigation = () => {
   const pathName = usePathname();
   const isMobile = useMediaQuery("(max-width:768px)");
@@ -112,7 +114,7 @@ const Navigation = () => {
     toast.promise(promise, {
       loading: "Creating a new note...",
       success: "New Note created",
-      error: "Somethign went wrong, try again later."
+      error: "Something went wrong, try again later."
     })
   }
   return (
@@ -161,6 +163,14 @@ const Navigation = () => {
             icon={Plus}
             label="Add a Page"
           />
+          <Popover>
+            <PopoverTrigger className="w-full mt-4">
+              <Item label="Trash" icon={Trash}/>
+            </PopoverTrigger>
+            <PopoverContent side={isMobile ?"bottom" : "right"} className="p-0 w-72" >
+              <TrashBox />
+            </PopoverContent>
+          </Popover>
         </div>
         <div
           onMouseDown={handleMouseDown}
