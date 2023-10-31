@@ -1,6 +1,6 @@
 "use client";
 import { ChevronsLeft, MenuIcon, Plus, PlusCircle, Search, Settings, Trash } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import React, { ElementRef, useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
@@ -15,9 +15,12 @@ import { DocumentList } from "./DocumentList";
 import { useSearch } from "@/hooks/use-search";
 import { useSettings } from "@/hooks/use-settings";
 import TrashBox from "./TrashBox";
+import Navbar from "./Navbar";
+
 const Navigation = () => {
   const settings = useSettings(); 
   const search = useSearch() ;
+  const params = useParams();
   const pathName = usePathname();
   const isMobile = useMediaQuery("(max-width:768px)");
   
@@ -190,7 +193,13 @@ const Navigation = () => {
           isMobile && `left-0 w-full`
         )}
       >
-        <nav className="bg-transparent px-3 py-2 w-full">
+        {!!params.documentId ? (
+          <Navbar
+            isCollapsed={isCollapsed}
+            onResetWidth={resetWidth}
+            />
+        ) : (
+          <nav className="bg-transparent px-3 py-2 w-full">
           {isCollapsed && (
             <MenuIcon
               onClick={resetWidth}
@@ -199,6 +208,8 @@ const Navigation = () => {
             />
           )}
         </nav>
+        )}
+       
       </div>
     </>
   );
