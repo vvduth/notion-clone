@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import Spinner from "@/components/Spinner";
 import { Search, Trash, Undo } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import ConfirmModal from "@/components/modals/confirm-modal";
 
 const TrashBox = () => {
   const router = useRouter();
@@ -39,29 +40,21 @@ const TrashBox = () => {
   };
 
   const onRemove = (
-    event: React.MouseEvent<HTMLElement, MouseEvent>,
-    documentId: Id<"documents">
+    documentId: Id<"documents">,
   ) => {
-    event.stopPropagation();
     const promise = remove({ id: documentId });
+
     toast.promise(promise, {
-      loading: "Deleting note..",
-      success: "Note deleted",
-      error: "Sowmthing went wrong while removing",
+      loading: "Deleting note...",
+      success: "Note deleted!",
+      error:" Failed to delete note."
     });
 
-    if (params.id === documentId) {
+    if (params.documentId === documentId) {
       router.push("/documents");
     }
-
-    if (documents === undefined) {
-      return (
-        <div className="h-full flex items-center p-4">
-          <Spinner size={"lg"} />
-        </div>
-      );
-    }
   };
+
 
   return (
     <div className="text-sm">
@@ -79,29 +72,33 @@ const TrashBox = () => {
           No documents found.
         </p>
         {filteredDocuments?.map((doc) => (
-            <div
-                key={doc._id}
+          <div
+            key={doc._id}
+            role="button"
+            onClick={() => onClick(doc._id)}
+            className="text-sm rounded-sm w-full hover:bg-primary/5 flex items-center text-primary justify-between"
+          >
+            <span className="truncate pl-2">{doc.title}</span>
+            <div className="flex items-center">
+              <div
+                onClick={(e) => onRestore(e, doc._id)}
                 role="button"
-                onClick={() => onClick(doc._id)}
-                 className="text-sm rounded-sm w-full hover:bg-primary/5 flex items-center text-primary justify-between"
-            >
-                <span className="truncate pl-2">
-                    {doc.title}
-                </span>
-                <div className="flex items-center">
-                    <div
-                        onClick={(e) => onRestore(e, doc._id)}
-                        role="button"
-                        className="rounded-sm p-2 hover:bg-neutral-200"
-                    >
-                        <Undo className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div role="button" className="rounded-sm p-2 hover:bg-neutral-200">
-
-                        <Trash className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                </div>
+                className="rounded-sm p-2 hover:bg-neutral-200"
+              >
+                <Undo className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <ConfirmModal
+                onConfirm={() => onRemove(doc._id)}
+              >
+              <div
+                role="button"
+                className="rounded-sm p-2 hover:bg-neutral-200"
+              >
+                <Trash className="w-4 h-4 text-muted-foreground" />
+              </div>
+              </ConfirmModal>
             </div>
+          </div>
         ))}
       </div>
     </div>
