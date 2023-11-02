@@ -3,6 +3,7 @@ const nextConfig = {
     images: {
         domains: [
             "source.unsplash.com",
+            "files.edgestore.dev"
         ]
     }
 }
